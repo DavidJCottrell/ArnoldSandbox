@@ -1,0 +1,3 @@
+[submodule "external/ArnoldEngine"]
+	path = external/ArnoldEngine
+	url = https://github.com/DavidJCottrell/ArnoldEngine.git
