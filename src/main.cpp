@@ -1,8 +1,8 @@
-#include <Application.hpp>
+#include <ArnoldEngine.hpp>
 
 int main()
 {
-    Application app;
+    AE::Application app;
     app.DoWindow();
 
     return 0;
