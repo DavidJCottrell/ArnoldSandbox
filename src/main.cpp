@@ -1,8 +1,7 @@
 #include <Application.hpp>
 
-int main(int argc, char const *argv[])
+int main()
 {
-
     Application app;
     app.DoWindow();
 
