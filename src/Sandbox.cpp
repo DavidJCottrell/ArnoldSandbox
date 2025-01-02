@@ -1,9 +1,33 @@
 #include "ArnoldEngine.h"
 
+class ExampleLayer : public AE::Core::Layer
+{
+public:
+    ExampleLayer()
+        : Layer()
+    {
+    }
+
+    void OnUpdate() override
+    {
+        // AE_INFO("ExampleLayer::Update");
+    }
+
+    void OnEvent(AE::Events::Event &event) override
+    {
+        // AE_TRACE("{0}", event);
+    }
+};
+
 class Sandbox : public AE::Core::Application
 {
 public:
-    Sandbox(const char *windowTitle) : AE::Core::Application(windowTitle) {}
+    Sandbox()
+    {
+        PushLayer(new ExampleLayer());
+        PushOverlay(new AE::Graphics::UI::ImGuiLayer());
+    }
+
     ~Sandbox()
     {
         AE_INFO("Application shutdown");
@@ -13,5 +37,5 @@ public:
 AE::Core::Application *AE::Core::CreateApplication()
 {
     AE_INFO("Starting application...");
-    return new Sandbox("Demo Game");
+    return new Sandbox();
 }
