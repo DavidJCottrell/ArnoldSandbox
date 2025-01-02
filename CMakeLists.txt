@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(USE_ITERM "Use iTerm2 for running the application" ON)
+
 add_subdirectory(external/ArnoldEngine)
 
 add_executable(${PROJECT_NAME}
@@ -13,8 +15,17 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ArnoldEngine)
 
-add_custom_target(run
-    COMMAND ${CMAKE_BINARY_DIR}/ArnoldSandbox
-    DEPENDS ArnoldSandbox
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+if(USE_ITERM)
+    add_custom_target(run
+        COMMAND open -a iTerm "${CMAKE_BINARY_DIR}/ArnoldSandbox"
+        DEPENDS ArnoldSandbox
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+else()
+    add_custom_target(run
+        COMMAND ${CMAKE_BINARY_DIR}/ArnoldSandbox
+        DEPENDS ArnoldSandbox
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        USES_TERMINAL
+    )
+endif()
