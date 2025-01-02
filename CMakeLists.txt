@@ -11,6 +11,8 @@ add_subdirectory(external/ArnoldEngine)
 
 add_executable(${PROJECT_NAME}
     src/Sandbox.cpp
+    src/ExampleLayer.cpp
+    src/main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ArnoldEngine)
