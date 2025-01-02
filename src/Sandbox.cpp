@@ -1,16 +1,17 @@
 #include "ArnoldEngine.h"
 
-class Sandbox : public AE::Application
+class Sandbox : public AE::Core::Application
 {
 public:
-    Sandbox() {}
-    ~Sandbox() {
+    Sandbox(const char *windowTitle) : AE::Core::Application(windowTitle) {}
+    ~Sandbox()
+    {
         AE_INFO("Application shutdown");
     }
 };
 
-AE::Application *AE::CreateApplication()
+AE::Core::Application *AE::Core::CreateApplication()
 {
     AE_INFO("Starting application...");
-    return new Sandbox();
+    return new Sandbox("Demo Game");
 }

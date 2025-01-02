@@ -12,3 +12,9 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ArnoldEngine)
+
+add_custom_target(run
+    COMMAND ${CMAKE_BINARY_DIR}/ArnoldSandbox
+    DEPENDS ArnoldSandbox
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
