@@ -2,7 +2,7 @@
 
 #include "ArnoldEngine.h"
 
-class ExampleLayer : public AE::Core::Layer
+class ExampleLayer final : public AE::Core::Layer
 {
 public:
     ExampleLayer();
