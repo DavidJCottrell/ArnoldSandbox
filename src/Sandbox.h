@@ -2,11 +2,11 @@
 
 #include "ArnoldEngine.h"
 
-class Sandbox : public AE::Core::Application
+class Sandbox final : public AE::Core::Application
 {
 public:
     Sandbox();
-    ~Sandbox();
+    ~Sandbox() override;
 
 private:
 };

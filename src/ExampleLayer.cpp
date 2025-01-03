@@ -1,8 +1,6 @@
 #include "ExampleLayer.h"
 
-ExampleLayer::ExampleLayer() : Layer()
-{
-}
+ExampleLayer::ExampleLayer() = default;
 
 void ExampleLayer::OnUpdate()
 {
