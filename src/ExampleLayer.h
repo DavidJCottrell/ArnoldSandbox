@@ -8,5 +8,7 @@ public:
     ExampleLayer();
 
     void OnUpdate() override;
-    void OnEvent(AE::Events::Event &event) override;
+    void OnEvent(AE::Events::Event& event) override;
+
+    bool HandleKeyPressed(AE::Events::KeyPressedEvent& e);
 };

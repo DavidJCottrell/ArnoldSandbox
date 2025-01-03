@@ -6,7 +6,6 @@ void ExampleLayer::OnUpdate()
 {
 }
 
-void ExampleLayer::OnEvent(AE::Events::Event &event)
+void ExampleLayer::OnEvent(AE::Events::Event& event)
 {
-    AE_TRACE("{0}", event);
 }
