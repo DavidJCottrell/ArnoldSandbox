@@ -4,7 +4,6 @@
 Sandbox::Sandbox()
 {
     PushLayer(new ExampleLayer());
-    PushOverlay(new AE::Graphics::UI::ImGuiLayer());
 }
 
 Sandbox::~Sandbox()
