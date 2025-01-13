@@ -14,3 +14,17 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ArnoldEngine)
+
+# Add post-build commands to copy all required DLLs
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            # Copy ArnoldEngine DLL
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:ArnoldEngine>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            # Copy CCM DLL
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:ccm>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    )
+endif()
