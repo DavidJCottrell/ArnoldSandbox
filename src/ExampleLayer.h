@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Events/KeyEvent.h>
+
 #include "ArnoldEngine.h"
 
 class ExampleLayer final : public AE::Core::Layer
