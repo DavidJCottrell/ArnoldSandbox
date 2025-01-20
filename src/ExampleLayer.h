@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Events/KeyEvent.h>
+#include <Arnold/Events/KeyEvent.h>
 
 #include "ArnoldEngine.h"
 
@@ -12,6 +12,10 @@ public:
     void OnUpdate() override;
     void OnEvent(AE::Events::Event& event) override;
     void OnImGuiRender() override;
+    void OnAttach() override;
 
     bool HandleKeyPressed(AE::Events::KeyPressedEvent& e);
+
+private:
+    bool m_DockSpaceInitialized = false;
 };
