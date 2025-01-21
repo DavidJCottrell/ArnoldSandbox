@@ -8,7 +8,8 @@ class ExampleLayer final : public AE::Core::Layer
 public:
     ExampleLayer()
         : Layer("ExampleLayer"),
-          m_Camera(-1.6f, 1.6f, -0.9f, 0.9f)
+          m_Camera(-1.6f, 1.6f, -0.9f, 0.9f),
+          m_CameraPosition(0.0f)
     {
         // ----------- TRIANGLE -----------
         m_TriangleVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
@@ -135,8 +136,25 @@ public:
 
     void OnUpdate() override
     {
+        // Up/Down Camera Movement
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_UP)) m_CameraPosition.y -= m_CameraMoveSpeed;
+        else if (AE::Core::Input::IsKeyPressed(AE_KEY_DOWN)) m_CameraPosition.y += m_CameraMoveSpeed;
+
+        // Left/Right Camera Movement
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT)) m_CameraPosition.x += m_CameraMoveSpeed;
+        else if (AE::Core::Input::IsKeyPressed(AE_KEY_RIGHT)) m_CameraPosition.x -= m_CameraMoveSpeed;
+
+        // Camera Rotation
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_A))
+            m_CameraRotation += m_CameraRotationSpeed;
+        else if (AE::Core::Input::IsKeyPressed(AE_KEY_D))
+            m_CameraRotation -= m_CameraRotationSpeed;
+
         AE::Graphics::Renderer::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
         AE::Graphics::Renderer::RenderCommand::Clear();
+
+        m_Camera.SetPosition(m_CameraPosition);
+        m_Camera.SetRotation(m_CameraRotation);
 
         AE::Graphics::Renderer::Renderer::Renderer::BeginScene(m_Camera);
 
@@ -154,6 +172,12 @@ private:
     std::shared_ptr<AE::Graphics::Renderer::Shader> m_SquareShader;
 
     AE::Graphics::Renderer::OrthographicCamera m_Camera;
+
+    float m_CameraMoveSpeed = 0.1f;
+    glm::vec3 m_CameraPosition;
+
+    float m_CameraRotation = 0.0f;
+    float m_CameraRotationSpeed = 0.5f;
 };
 
 class SandboxGame final : public AE::Core::Application
