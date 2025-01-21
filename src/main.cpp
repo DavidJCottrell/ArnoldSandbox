@@ -134,21 +134,21 @@ public:
         m_SquareShader = std::make_unique<AE::Graphics::Renderer::Shader>(vertexSrc2, fragmentSrc2);
     }
 
-    void OnUpdate() override
+    void OnUpdate(const AE::Core::Timestep ts) override
     {
         // Up/Down Camera Movement
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_UP)) m_CameraPosition.y -= m_CameraMoveSpeed;
-        else if (AE::Core::Input::IsKeyPressed(AE_KEY_DOWN)) m_CameraPosition.y += m_CameraMoveSpeed;
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_UP)) m_CameraPosition.y -= m_CameraMoveSpeed * ts;
+        else if (AE::Core::Input::IsKeyPressed(AE_KEY_DOWN)) m_CameraPosition.y += m_CameraMoveSpeed * ts;
 
         // Left/Right Camera Movement
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT)) m_CameraPosition.x += m_CameraMoveSpeed;
-        else if (AE::Core::Input::IsKeyPressed(AE_KEY_RIGHT)) m_CameraPosition.x -= m_CameraMoveSpeed;
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT)) m_CameraPosition.x += m_CameraMoveSpeed * ts;
+        else if (AE::Core::Input::IsKeyPressed(AE_KEY_RIGHT)) m_CameraPosition.x -= m_CameraMoveSpeed * ts;
 
         // Camera Rotation
         if (AE::Core::Input::IsKeyPressed(AE_KEY_A))
-            m_CameraRotation += m_CameraRotationSpeed;
+            m_CameraRotation += m_CameraRotationSpeed * ts;
         else if (AE::Core::Input::IsKeyPressed(AE_KEY_D))
-            m_CameraRotation -= m_CameraRotationSpeed;
+            m_CameraRotation -= m_CameraRotationSpeed * ts;
 
         AE::Graphics::Renderer::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
         AE::Graphics::Renderer::RenderCommand::Clear();
@@ -173,11 +173,11 @@ private:
 
     AE::Graphics::Renderer::OrthographicCamera m_Camera;
 
-    float m_CameraMoveSpeed = 0.1f;
     glm::vec3 m_CameraPosition;
+    float m_CameraMoveSpeed = 5.0f;
 
     float m_CameraRotation = 0.0f;
-    float m_CameraRotationSpeed = 0.5f;
+    float m_CameraRotationSpeed = 180.0f;
 };
 
 class SandboxGame final : public AE::Core::Application
