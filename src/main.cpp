@@ -13,7 +13,8 @@ public:
         : Layer("ExampleLayer"),
           m_Camera(-1.6f, 1.6f, -0.9f, 0.9f),
           m_CameraPosition(0.0f),
-          m_SquarePosition(0.0f)
+          m_SquarePosition(0.0f),
+          m_TrianglePosition(0.0f)
     {
         // ----------- TRIANGLE -----------
         m_TriangleVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
@@ -177,6 +178,20 @@ public:
         AE::Graphics::Renderer::Renderer::Renderer::Submit(m_TriangleShader, m_TriangleVertexArray);
 
         AE::Graphics::Renderer::Renderer::Renderer::EndScene();
+    }
+
+    void OnImGuiRender() override
+    {
+        // Camera Controls
+        ImGui::Begin("Camera");
+        ImGui::Text("Camera rotation: %.2f", m_CameraRotation);
+        ImGui::Text("Camera position: (x: %.2f, y: %.2f)", m_CameraPosition.x, m_CameraPosition.y);
+        if (ImGui::Button("Reset Camera"))
+        {
+            m_CameraRotation = 0.0f;
+            m_CameraPosition = {0.0f, 0.0f, 0.0f};
+        }
+        ImGui::End();
     }
 
 private:
