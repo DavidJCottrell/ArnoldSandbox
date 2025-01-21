@@ -76,18 +76,29 @@ public:
 
     void OnUpdate(const AE::Core::Timestep ts) override
     {
-        // Up/Down Camera Movement
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_UP)) m_CameraPosition.y += m_CameraMoveSpeed * ts;
-        else if (AE::Core::Input::IsKeyPressed(AE_KEY_DOWN)) m_CameraPosition.y -= m_CameraMoveSpeed * ts;
-        // Left/Right Camera Movement
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT)) m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-        else if (AE::Core::Input::IsKeyPressed(AE_KEY_RIGHT)) m_CameraPosition.x += m_CameraMoveSpeed * ts;
+        glm::vec3 moveDir(0.0f);
 
-        // Camera Rotation
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_A))
-            m_CameraRotation += m_CameraRotationSpeed * ts;
-        else if (AE::Core::Input::IsKeyPressed(AE_KEY_D))
-            m_CameraRotation -= m_CameraRotationSpeed * ts;
+        /* Convert camera's rotation from degrees to radians.
+         * Making it negative ensures the correct directional mapping
+        **/
+        const float rads = glm::radians(-m_CameraRotation);
+        const glm::vec2 up(sin(rads), cos(rads));
+        const glm::vec2 right(cos(rads), -sin(rads));
+
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_W)) // Up
+            moveDir += glm::vec3(up.x, up.y, 0.0f);
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_S)) // Down
+            moveDir -= glm::vec3(up.x, up.y, 0.0f);
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_D)) // Right
+            moveDir += glm::vec3(right.x, right.y, 0.0f);
+        if (AE::Core::Input::IsKeyPressed(AE_KEY_A)) // Left
+            moveDir -= glm::vec3(right.x, right.y, 0.0f);
+
+        // Normalise horizontal movement
+        if (length(moveDir) > 0.0f)
+            moveDir = normalize(moveDir);
+
+        m_CameraPosition += moveDir * m_CameraMoveSpeed * ts.GetSeconds();
 
         AE::Graphics::Renderer::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
         AE::Graphics::Renderer::RenderCommand::Clear();
@@ -122,6 +133,7 @@ public:
             m_CameraRotation = 0.0f;
             m_CameraPosition = {0.0f, 0.0f, 0.0f};
         }
+        ImGui::SliderFloat("Rotation", &m_CameraRotation, 0.0f, 360.0f);
         ImGui::End();
     }
 
@@ -138,6 +150,10 @@ private:
     float m_CameraRotation = 0.0f;
     float m_CameraRotationSpeed = 180.0f;
 };
+
+
+// --------- Sandbox ---------
+
 
 class SandboxGame final : public AE::Core::Application
 {
