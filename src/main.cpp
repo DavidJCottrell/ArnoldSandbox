@@ -81,7 +81,7 @@ public:
         /* Convert camera's rotation from degrees to radians.
          * Making it negative ensures the correct directional mapping
         **/
-        const float rads = glm::radians(-m_CameraRotation);
+        const float rads = glm::radians(m_CameraRotation);
         const glm::vec2 up(sin(rads), cos(rads));
         const glm::vec2 right(cos(rads), -sin(rads));
 
