@@ -1,154 +1,218 @@
 #define AE_MAIN
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include "ArnoldEngine.h"
-#include "glm/gtx/transform.hpp"
+#include "Arnold/Core/Window.h"
+#include "Arnold/Events/MouseEvent.h"
+#include "Arnold/Events/KeyEvent.h"
+#include "Arnold/Events/ApplicationEvent.h"
 
-class ExampleLayer final : public AE::Core::Layer
+class FpsLayer final : public AE::Core::Layer
 {
 public:
-    ExampleLayer()
-        : Layer("ExampleLayer"),
-          m_Camera(-1.6f, 1.6f, -0.9f, 0.9f),
-          m_CameraPosition(0.0f)
+    FpsLayer()
+        : Layer("FpsLayer"),
+          m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        m_SquareVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
+        m_CubeVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
 
-        constexpr float squareVertices[3 * 4] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.5f, 0.5f, 0.0f,
-            -0.5f, 0.5f, 0.0f
+        // 24 vertices: 4 per face, Float3 position + Float3 color
+        // Face order: front (+Z), back (-Z), top (+Y), bottom (-Y), right (+X), left (-X)
+        constexpr float vertices[] = {
+            // Front (+Z) — red
+            -0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
+             0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
+             0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
+            -0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
+            // Back (-Z) — green
+            -0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
+             0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
+             0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
+            -0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
+            // Top (+Y) — blue
+            -0.5f,  0.5f, -0.5f,   0.2f, 0.4f, 1.0f,
+             0.5f,  0.5f, -0.5f,   0.2f, 0.4f, 1.0f,
+             0.5f,  0.5f,  0.5f,   0.2f, 0.4f, 1.0f,
+            -0.5f,  0.5f,  0.5f,   0.2f, 0.4f, 1.0f,
+            // Bottom (-Y) — yellow
+            -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.2f,
+             0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.2f,
+             0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.2f,
+            -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.2f,
+            // Right (+X) — cyan
+             0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,   0.2f, 1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,   0.2f, 1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 1.0f,
+            // Left (-X) — magenta
+            -0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 1.0f,
+            -0.5f, -0.5f, -0.5f,   1.0f, 0.2f, 1.0f,
+            -0.5f,  0.5f, -0.5f,   1.0f, 0.2f, 1.0f,
+            -0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 1.0f,
         };
 
-        // Create the vertex buffer
-        std::shared_ptr<AE::Graphics::Renderer::VertexBuffer> squareVB;
-        squareVB.reset(AE::Graphics::Renderer::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-        // Set the layout of the vertex buffer
-        squareVB->SetLayout({
-            {AE::Graphics::Renderer::ShaderDataType::Float3, "a_Position"},
+        std::shared_ptr<AE::Graphics::Renderer::VertexBuffer> vb;
+        vb.reset(AE::Graphics::Renderer::VertexBuffer::Create(vertices, sizeof(vertices)));
+        vb->SetLayout({
+            { AE::Graphics::Renderer::ShaderDataType::Float3, "a_Position" },
+            { AE::Graphics::Renderer::ShaderDataType::Float3, "a_Color"    },
         });
-        // Add the vertex buffer to the vertex array
-        m_SquareVertexArray->AddVertexBuffer(squareVB);
+        m_CubeVertexArray->AddVertexBuffer(vb);
 
+        // 36 indices: 6 faces x 2 triangles x 3 vertices
+        uint32_t indices[36];
+        for (uint32_t face = 0; face < 6; ++face)
+        {
+            const uint32_t base = face * 4;
+            const uint32_t i    = face * 6;
+            indices[i + 0] = base + 0; indices[i + 1] = base + 1; indices[i + 2] = base + 2;
+            indices[i + 3] = base + 2; indices[i + 4] = base + 3; indices[i + 5] = base + 0;
+        }
 
-        uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
-        // Create the index buffer
-        std::shared_ptr<AE::Graphics::Renderer::IndexBuffer> squareIB;
-        squareIB.reset(
-            AE::Graphics::Renderer::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+        std::shared_ptr<AE::Graphics::Renderer::IndexBuffer> ib;
+        ib.reset(AE::Graphics::Renderer::IndexBuffer::Create(indices, 36));
+        m_CubeVertexArray->SetIndexBuffer(ib);
 
-        // Add the index buffer to the vertex array
-        m_SquareVertexArray->SetIndexBuffer(squareIB);
-
-        std::string vertexSrc = R"(
+        const std::string vertexSrc = R"(
             #version 330 core
 
             layout(location = 0) in vec3 a_Position;
+            layout(location = 1) in vec3 a_Color;
 
             uniform mat4 u_ViewProjection;
             uniform mat4 u_Transform;
 
-            out vec3 v_Position;
+            out vec3 v_Color;
 
             void main()
             {
-                v_Position = a_Position;
+                v_Color = a_Color;
                 gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
             }
         )";
 
-        std::string fragmentSrc = R"(
+        const std::string fragmentSrc = R"(
             #version 330 core
 
             layout(location = 0) out vec4 color;
 
-            in vec3 v_Position;
+            in vec3 v_Color;
 
             void main()
             {
-                color = vec4(0.2, 0.3, 0.8, 1.0);
+                color = vec4(v_Color, 1.0);
             }
         )";
 
-        m_SquareShader = std::make_unique<AE::Graphics::Renderer::Shader>(vertexSrc, fragmentSrc);
+        m_CubeShader = std::make_shared<AE::Graphics::Renderer::Shader>(vertexSrc, fragmentSrc);
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
     {
-        glm::vec3 moveDir(0.0f);
-
-        /* Convert camera's rotation from degrees to radians.
-         * Making it negative ensures the correct directional mapping
-        **/
-        const float rads = glm::radians(m_CameraRotation);
-        const glm::vec2 up(sin(rads), cos(rads));
-        const glm::vec2 right(cos(rads), -sin(rads));
-
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_W)) // Up
-            moveDir += glm::vec3(up.x, up.y, 0.0f);
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_S)) // Down
-            moveDir -= glm::vec3(up.x, up.y, 0.0f);
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_D)) // Right
-            moveDir += glm::vec3(right.x, right.y, 0.0f);
-        if (AE::Core::Input::IsKeyPressed(AE_KEY_A)) // Left
-            moveDir -= glm::vec3(right.x, right.y, 0.0f);
-
-        // Normalise horizontal movement
-        if (length(moveDir) > 0.0f)
-            moveDir = normalize(moveDir);
-
-        m_CameraPosition += moveDir * m_CameraMoveSpeed * ts.GetSeconds();
-
-        AE::Graphics::Renderer::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
-        AE::Graphics::Renderer::RenderCommand::Clear();
-
-        m_Camera.SetPosition(m_CameraPosition);
-        m_Camera.SetRotation(m_CameraRotation);
-
-        AE::Graphics::Renderer::Renderer::Renderer::BeginScene(m_Camera);
-        const glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
-
-        for (int y = 0; y < 20; ++y)
+        if (m_CursorCaptured)
         {
-            for (int x = 0; x < 20; ++x)
-            {
-                glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
-                glm::mat4 transform = translate(glm::mat4(1.0f), pos) * scale;
-                AE::Graphics::Renderer::Renderer::Submit(m_SquareShader, m_SquareVertexArray, transform);
-            }
+            const glm::vec3 right = m_Camera.GetRight();
+
+            // Project forward to XZ plane for grounded horizontal movement
+            const glm::vec3 camForward = m_Camera.GetForward();
+            glm::vec3 moveForward(camForward.x, 0.0f, camForward.z);
+            if (glm::length(moveForward) > 0.001f)
+                moveForward = glm::normalize(moveForward);
+
+            glm::vec3 moveDir(0.0f);
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_W))           moveDir += moveForward;
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_S))           moveDir -= moveForward;
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_D))           moveDir += right;
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_A))           moveDir -= right;
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_SPACE))       moveDir += glm::vec3(0.0f, 1.0f, 0.0f);
+            if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT_SHIFT))  moveDir -= glm::vec3(0.0f, 1.0f, 0.0f);
+
+            if (glm::length(moveDir) > 0.0f)
+                moveDir = glm::normalize(moveDir);
+
+            m_Camera.SetPosition(m_Camera.GetPosition() + moveDir * m_MoveSpeed * ts.GetSeconds());
         }
 
-        AE::Graphics::Renderer::Renderer::Renderer::EndScene();
+        AE::Graphics::Renderer::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        AE::Graphics::Renderer::RenderCommand::Clear();
+
+        AE::Graphics::Renderer::Renderer::BeginScene(m_Camera);
+        AE::Graphics::Renderer::Renderer::Submit(m_CubeShader, m_CubeVertexArray);
+        AE::Graphics::Renderer::Renderer::EndScene();
+    }
+
+    void OnEvent(AE::Events::Event& e) override
+    {
+        AE::Events::EventHandler handler(e);
+
+        handler.TryHandle<AE::Events::MouseMovedEvent>([this](AE::Events::MouseMovedEvent& ev)
+        {
+            if (!m_CursorCaptured)
+                return false;
+
+            if (m_FirstMouse)
+            {
+                m_LastMouseX = ev.GetX();
+                m_LastMouseY = ev.GetY();
+                m_FirstMouse = false;
+                return false;
+            }
+
+            const float xOffset = ev.GetX() - m_LastMouseX;
+            const float yOffset = ev.GetY() - m_LastMouseY;
+            m_LastMouseX = ev.GetX();
+            m_LastMouseY = ev.GetY();
+
+            m_Camera.ProcessMouseMovement(xOffset, yOffset);
+            return false;
+        });
+
+        handler.TryHandle<AE::Events::KeyPressedEvent>([this](AE::Events::KeyPressedEvent& ev)
+        {
+            if (ev.GetKeyCode() == AE_KEY_ESCAPE)
+            {
+                m_CursorCaptured = !m_CursorCaptured;
+                m_FirstMouse = true;
+                AE::Core::Application::Get().GetWindow().SetCursorMode(
+                    m_CursorCaptured
+                        ? AE::Core::CursorMode::Captured
+                        : AE::Core::CursorMode::Normal
+                );
+                return true;
+            }
+            return false;
+        });
+
+        handler.TryHandle<AE::Events::WindowResizeEvent>([this](AE::Events::WindowResizeEvent& ev)
+        {
+            if (ev.GetWidth() > 0 && ev.GetHeight() > 0)
+                m_Camera.SetAspectRatio(static_cast<float>(ev.GetWidth()) / static_cast<float>(ev.GetHeight()));
+            return false;
+        });
     }
 
     void OnImGuiRender() override
     {
-        // Camera Controls
+        const glm::vec3& pos = m_Camera.GetPosition();
         ImGui::Begin("Camera");
-        ImGui::Text("Camera rotation: %.2f", m_CameraRotation);
-        ImGui::Text("Camera position: (x: %.2f, y: %.2f)", m_CameraPosition.x, m_CameraPosition.y);
-        if (ImGui::Button("Reset Camera"))
-        {
-            m_CameraRotation = 0.0f;
-            m_CameraPosition = {0.0f, 0.0f, 0.0f};
-        }
-        ImGui::SliderFloat("Rotation", &m_CameraRotation, 0.0f, 360.0f);
+        ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+        ImGui::Text("Yaw:   %.1f", m_Camera.GetYaw());
+        ImGui::Text("Pitch: %.1f", m_Camera.GetPitch());
+        ImGui::Separator();
+        ImGui::Text("Cursor: %s", m_CursorCaptured ? "Captured" : "Normal");
+        ImGui::Text("[ESC] to toggle cursor capture");
         ImGui::End();
     }
 
 private:
-    std::shared_ptr<AE::Graphics::Renderer::VertexArray> m_SquareVertexArray;
+    AE::Graphics::Renderer::PerspectiveCamera m_Camera;
+    std::shared_ptr<AE::Graphics::Renderer::VertexArray> m_CubeVertexArray;
+    std::shared_ptr<AE::Graphics::Renderer::Shader>      m_CubeShader;
 
-    std::shared_ptr<AE::Graphics::Renderer::Shader> m_SquareShader;
-
-    AE::Graphics::Renderer::OrthographicCamera m_Camera;
-
-    glm::vec3 m_CameraPosition;
-    float m_CameraMoveSpeed = 5.0f;
-
-    float m_CameraRotation = 0.0f;
-    float m_CameraRotationSpeed = 180.0f;
+    float m_MoveSpeed   = 5.0f;
+    float m_LastMouseX  = 640.0f;
+    float m_LastMouseY  = 360.0f;
+    bool  m_FirstMouse     = true;
+    bool  m_CursorCaptured = false;
 };
 
 
@@ -160,11 +224,10 @@ class SandboxGame final : public AE::Core::Application
 public:
     SandboxGame()
     {
-        PushLayer(new ExampleLayer());
+        PushLayer(new FpsLayer());
     }
 
-    ~SandboxGame() override
-    = default;
+    ~SandboxGame() override = default;
 };
 
 
