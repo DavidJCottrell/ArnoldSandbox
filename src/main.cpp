@@ -13,48 +13,50 @@ public:
         : Layer("FpsLayer"),
           m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        m_CubeVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
-
-        // 24 vertices: 4 per face, Float3 position + Float3 color
+        // --- Cube geometry ---
+        // 24 vertices: 4 per face, Float3 position + Float2 UV
         // Face order: front (+Z), back (-Z), top (+Y), bottom (-Y), right (+X), left (-X)
+        // UVs: (0,0) bottom-left → (1,1) top-right, consistent across all faces
         constexpr float vertices[] = {
-            // Front (+Z) — red
-            -0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
-             0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
-             0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
-            -0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 0.2f,
-            // Back (-Z) — green
-            -0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
-             0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
-             0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
-            -0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 0.2f,
-            // Top (+Y) — blue
-            -0.5f,  0.5f, -0.5f,   0.2f, 0.4f, 1.0f,
-             0.5f,  0.5f, -0.5f,   0.2f, 0.4f, 1.0f,
-             0.5f,  0.5f,  0.5f,   0.2f, 0.4f, 1.0f,
-            -0.5f,  0.5f,  0.5f,   0.2f, 0.4f, 1.0f,
-            // Bottom (-Y) — yellow
-            -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.2f,
-             0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.2f,
-             0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.2f,
-            -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.2f,
-            // Right (+X) — cyan
-             0.5f, -0.5f, -0.5f,   0.2f, 1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,   0.2f, 1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,   0.2f, 1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,   0.2f, 1.0f, 1.0f,
-            // Left (-X) — magenta
-            -0.5f, -0.5f,  0.5f,   1.0f, 0.2f, 1.0f,
-            -0.5f, -0.5f, -0.5f,   1.0f, 0.2f, 1.0f,
-            -0.5f,  0.5f, -0.5f,   1.0f, 0.2f, 1.0f,
-            -0.5f,  0.5f,  0.5f,   1.0f, 0.2f, 1.0f,
+            // Front (+Z)
+            -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,   1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,   1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,
+            // Back (-Z)
+             0.5f, -0.5f, -0.5f,   0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,   1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,   1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,   0.0f, 1.0f,
+            // Top (+Y)
+            -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,
+            // Bottom (-Y)
+            -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,   1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,   1.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,
+            // Right (+X)
+             0.5f, -0.5f,  0.5f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,   0.0f, 1.0f,
+            // Left (-X)
+            -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,   1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,
         };
+
+        m_CubeVertexArray.reset(AE::Graphics::Renderer::VertexArray::Create());
 
         std::shared_ptr<AE::Graphics::Renderer::VertexBuffer> vb;
         vb.reset(AE::Graphics::Renderer::VertexBuffer::Create(vertices, sizeof(vertices)));
         vb->SetLayout({
             { AE::Graphics::Renderer::ShaderDataType::Float3, "a_Position" },
-            { AE::Graphics::Renderer::ShaderDataType::Float3, "a_Color"    },
+            { AE::Graphics::Renderer::ShaderDataType::Float2, "a_TexCoord" },
         });
         m_CubeVertexArray->AddVertexBuffer(vb);
 
@@ -72,20 +74,21 @@ public:
         ib.reset(AE::Graphics::Renderer::IndexBuffer::Create(indices, 36));
         m_CubeVertexArray->SetIndexBuffer(ib);
 
+        // --- Shaders ---
         const std::string vertexSrc = R"(
             #version 330 core
 
             layout(location = 0) in vec3 a_Position;
-            layout(location = 1) in vec3 a_Color;
+            layout(location = 1) in vec2 a_TexCoord;
 
             uniform mat4 u_ViewProjection;
             uniform mat4 u_Transform;
 
-            out vec3 v_Color;
+            out vec2 v_TexCoord;
 
             void main()
             {
-                v_Color = a_Color;
+                v_TexCoord  = a_TexCoord;
                 gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
             }
         )";
@@ -95,15 +98,26 @@ public:
 
             layout(location = 0) out vec4 color;
 
-            in vec3 v_Color;
+            in vec2 v_TexCoord;
+
+            uniform sampler2D u_Texture;
 
             void main()
             {
-                color = vec4(v_Color, 1.0);
+                color = texture(u_Texture, v_TexCoord);
             }
         )";
 
         m_CubeShader = std::make_shared<AE::Graphics::Renderer::Shader>(vertexSrc, fragmentSrc);
+
+        // --- Procedural checkerboard texture (no asset file required) ---
+        constexpr uint32_t W = 8, H = 8;
+        uint32_t pixels[W * H];
+        for (uint32_t y = 0; y < H; ++y)
+            for (uint32_t x = 0; x < W; ++x)
+                pixels[y * W + x] = ((x + y) % 2 == 0) ? 0xFFFFFFFF : 0xFF404040;
+
+        m_Texture = AE::Graphics::Renderer::Texture2D::Create("C:/dev/ArnoldSandbox/assets/textures/grass.jpg");
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
@@ -134,6 +148,9 @@ public:
 
         AE::Graphics::Renderer::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         AE::Graphics::Renderer::RenderCommand::Clear();
+
+        m_Texture->Bind(0);
+        m_CubeShader->UploadUniformInt("u_Texture", 0);
 
         AE::Graphics::Renderer::Renderer::BeginScene(m_Camera);
         AE::Graphics::Renderer::Renderer::Submit(m_CubeShader, m_CubeVertexArray);
@@ -204,9 +221,10 @@ public:
     }
 
 private:
-    AE::Graphics::Renderer::PerspectiveCamera m_Camera;
+    AE::Graphics::Renderer::PerspectiveCamera            m_Camera;
     std::shared_ptr<AE::Graphics::Renderer::VertexArray> m_CubeVertexArray;
     std::shared_ptr<AE::Graphics::Renderer::Shader>      m_CubeShader;
+    std::shared_ptr<AE::Graphics::Renderer::Texture2D>   m_Texture;
 
     float m_MoveSpeed   = 5.0f;
     float m_LastMouseX  = 640.0f;
