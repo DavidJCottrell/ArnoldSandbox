@@ -13,43 +13,9 @@ public:
         : Layer("FpsLayer"),
           m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        m_CubeMesh = AE::Graphics::Renderer::Mesh::CreateCube();
-
-        const std::string vertexSrc = R"(
-            #version 330 core
-
-            layout(location = 0) in vec3 a_Position;
-            layout(location = 1) in vec2 a_TexCoord;
-
-            uniform mat4 u_ViewProjection;
-            uniform mat4 u_Transform;
-
-            out vec2 v_TexCoord;
-
-            void main()
-            {
-                v_TexCoord  = a_TexCoord;
-                gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
-            }
-        )";
-
-        const std::string fragmentSrc = R"(
-            #version 330 core
-
-            layout(location = 0) out vec4 color;
-
-            in vec2 v_TexCoord;
-
-            uniform sampler2D u_Texture;
-
-            void main()
-            {
-                color = texture(u_Texture, v_TexCoord);
-            }
-        )";
-
-        m_CubeShader = std::make_shared<AE::Graphics::Renderer::Shader>(vertexSrc, fragmentSrc);
-        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("C:/dev/ArnoldSandbox/assets/textures/grass.jpg");
+        m_CubeMesh   = AE::Graphics::Renderer::Mesh::CreateCube();
+        m_CubeShader = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
+        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/grass.jpg");
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
