@@ -13,9 +13,9 @@ public:
         : Layer("FpsLayer"),
           m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        m_CubeMesh   = AE::Graphics::Renderer::Mesh::CreateCube();
         m_CubeShader = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
-        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/grass.jpg");
+        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/Rembo.JPEG");
+        m_Camera.SetPosition({32.0f, 5.0f, 32.0f});
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
@@ -51,7 +51,7 @@ public:
         m_CubeShader->UploadUniformInt("u_Texture", 0);
 
         AE::Graphics::Renderer::Renderer::BeginScene(m_Camera);
-        AE::Graphics::Renderer::Renderer::Submit(m_CubeShader, m_CubeMesh);
+        m_World.Render(m_CubeShader);
         AE::Graphics::Renderer::Renderer::EndScene();
     }
 
@@ -120,7 +120,7 @@ public:
 
 private:
     AE::Graphics::Renderer::PerspectiveCamera          m_Camera;
-    std::shared_ptr<AE::Graphics::Renderer::Mesh>      m_CubeMesh;
+    AE::World::World                                   m_World;
     std::shared_ptr<AE::Graphics::Renderer::Shader>    m_CubeShader;
     std::shared_ptr<AE::Graphics::Renderer::Texture2D> m_Texture;
 
