@@ -4,7 +4,11 @@
 class MyGame final : public AE::VoxelLayer
 {
 public:
-    MyGame() : VoxelLayer({.blockScale = 1.0f, .seed = 42}) {}
+    MyGame() : VoxelLayer({.blockScale = 1.0f, .seed = 42})
+    {
+        auto player = std::make_shared<AE::PlayerController>();
+        SetPlayerController(player);
+    }
 };
 
 
