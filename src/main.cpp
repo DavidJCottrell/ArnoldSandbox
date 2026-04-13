@@ -17,7 +17,9 @@ public:
         m_Material->SetInt("u_Texture", 0);
         m_Material->SetFloat3("u_LightDir", glm::normalize(glm::vec3(0.6f, 1.0f, 0.4f)));
 
-        m_CameraController.GetCamera().SetPosition({32.0f, 5.0f, 32.0f});
+        AE::World::WorldGenerator::GenerateTerrain(m_World, 42);
+
+        m_CameraController.GetCamera().SetPosition({32.0f, 15.0f, 32.0f});
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
