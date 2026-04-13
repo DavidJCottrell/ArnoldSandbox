@@ -4,7 +4,7 @@
 class MyGame final : public AE::VoxelLayer
 {
 public:
-    MyGame() : VoxelLayer({.blockScale = 0.01f, .seed = 42}) {}
+    MyGame() : VoxelLayer({.blockScale = 1.0f, .seed = 42}) {}
 };
 
 
