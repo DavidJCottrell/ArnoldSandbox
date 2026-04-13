@@ -1,136 +1,59 @@
 #define AE_MAIN
 
 #include "ArnoldEngine.h"
-#include "Arnold/Core/Window.h"
-#include "Arnold/Events/MouseEvent.h"
-#include "Arnold/Events/KeyEvent.h"
-#include "Arnold/Events/ApplicationEvent.h"
 
 class FpsLayer final : public AE::Core::Layer
 {
 public:
     FpsLayer()
         : Layer("FpsLayer"),
-          m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
+          m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        m_CubeShader = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
-        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/dirt.png");
-        m_Camera.SetPosition({32.0f, 5.0f, 32.0f});
+        m_Shader  = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
+        m_Texture = AE::Graphics::Renderer::Texture2D::Create("assets/textures/dirt.png");
+        m_CameraController.GetCamera().SetPosition({32.0f, 5.0f, 32.0f});
     }
 
     void OnUpdate(const AE::Core::Timestep ts) override
     {
-        if (m_CursorCaptured)
-        {
-            const glm::vec3 right      = m_Camera.GetRight();
-            const glm::vec3 camForward = m_Camera.GetForward();
+        m_CameraController.OnUpdate(ts);
 
-            // Project forward onto XZ plane for grounded horizontal movement
-            glm::vec3 moveForward(camForward.x, 0.0f, camForward.z);
-            if (glm::length(moveForward) > 0.001f)
-                moveForward = glm::normalize(moveForward);
-
-            glm::vec3 moveDir(0.0f);
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_W))           moveDir += moveForward;
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_S))           moveDir -= moveForward;
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_D))           moveDir += right;
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_A))           moveDir -= right;
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_SPACE))       moveDir += glm::vec3(0.0f, 1.0f, 0.0f);
-            if (AE::Core::Input::IsKeyPressed(AE_KEY_LEFT_SHIFT))  moveDir -= glm::vec3(0.0f, 1.0f, 0.0f);
-
-            if (glm::length(moveDir) > 0.0f)
-                moveDir = glm::normalize(moveDir);
-
-            m_Camera.SetPosition(m_Camera.GetPosition() + moveDir * m_MoveSpeed * ts.GetSeconds());
-        }
-
-        AE::Graphics::Renderer::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        AE::Graphics::Renderer::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1.0f});
         AE::Graphics::Renderer::RenderCommand::Clear();
 
-        m_CubeShader->Bind();
+        m_Shader->Bind();
         m_Texture->Bind(0);
-        m_CubeShader->UploadUniformInt("u_Texture", 0);
-        m_CubeShader->UploadUniformFloat3("u_LightDir", glm::normalize(glm::vec3(0.6f, 1.0f, 0.4f)));
+        m_Shader->UploadUniformInt("u_Texture", 0);
+        m_Shader->UploadUniformFloat3("u_LightDir", glm::normalize(glm::vec3(0.6f, 1.0f, 0.4f)));
 
-        AE::Graphics::Renderer::Renderer::BeginScene(m_Camera);
-        m_World.Render(m_CubeShader);
+        AE::Graphics::Renderer::Renderer::BeginScene(m_CameraController.GetCamera());
+        m_World.Render(m_Shader);
         AE::Graphics::Renderer::Renderer::EndScene();
     }
 
     void OnEvent(AE::Events::Event& e) override
     {
-        AE::Events::EventHandler handler(e);
-
-        handler.TryHandle<AE::Events::MouseMovedEvent>([this](AE::Events::MouseMovedEvent& ev)
-        {
-            if (!m_CursorCaptured)
-                return false;
-
-            if (m_FirstMouse)
-            {
-                m_LastMouseX = ev.GetX();
-                m_LastMouseY = ev.GetY();
-                m_FirstMouse = false;
-                return false;
-            }
-
-            const float xOffset = ev.GetX() - m_LastMouseX;
-            const float yOffset = ev.GetY() - m_LastMouseY;
-            m_LastMouseX = ev.GetX();
-            m_LastMouseY = ev.GetY();
-
-            m_Camera.ProcessMouseMovement(xOffset, yOffset);
-            return false;
-        });
-
-        handler.TryHandle<AE::Events::KeyPressedEvent>([this](AE::Events::KeyPressedEvent& ev)
-        {
-            if (ev.GetKeyCode() == AE_KEY_ESCAPE)
-            {
-                m_CursorCaptured = !m_CursorCaptured;
-                m_FirstMouse = true;
-                AE::Core::Application::Get().GetWindow().SetCursorMode(
-                    m_CursorCaptured
-                        ? AE::Core::CursorMode::Captured
-                        : AE::Core::CursorMode::Normal
-                );
-                return true;
-            }
-            return false;
-        });
-
-        handler.TryHandle<AE::Events::WindowResizeEvent>([this](AE::Events::WindowResizeEvent& ev)
-        {
-            if (ev.GetWidth() > 0 && ev.GetHeight() > 0)
-                m_Camera.SetAspectRatio(static_cast<float>(ev.GetWidth()) / static_cast<float>(ev.GetHeight()));
-            return false;
-        });
+        m_CameraController.OnEvent(e);
     }
 
     void OnImGuiRender() override
     {
-        const glm::vec3& pos = m_Camera.GetPosition();
+        const auto& cam = m_CameraController.GetCamera();
         ImGui::Begin("Camera");
-        ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
-        ImGui::Text("Yaw:   %.1f", m_Camera.GetYaw());
-        ImGui::Text("Pitch: %.1f", m_Camera.GetPitch());
+        ImGui::Text("Position: (%.2f, %.2f, %.2f)", cam.GetPosition().x, cam.GetPosition().y, cam.GetPosition().z);
+        ImGui::Text("Yaw:   %.1f", cam.GetYaw());
+        ImGui::Text("Pitch: %.1f", cam.GetPitch());
         ImGui::Separator();
-        ImGui::Text("Cursor: %s", m_CursorCaptured ? "Captured" : "Normal");
+        ImGui::Text("Cursor: %s", m_CameraController.IsCursorCaptured() ? "Captured" : "Normal");
         ImGui::Text("[ESC] to toggle cursor capture");
         ImGui::End();
     }
 
 private:
-    AE::Graphics::Renderer::PerspectiveCamera          m_Camera;
+    AE::Graphics::Renderer::FpsCameraController       m_CameraController;
     AE::World::World                                   m_World;
-    std::shared_ptr<AE::Graphics::Renderer::Shader>    m_CubeShader;
+    std::shared_ptr<AE::Graphics::Renderer::Shader>    m_Shader;
     std::shared_ptr<AE::Graphics::Renderer::Texture2D> m_Texture;
-
-    float m_MoveSpeed   = 5.0f;
-    float m_LastMouseX  = 640.0f;
-    float m_LastMouseY  = 360.0f;
-    bool  m_FirstMouse     = true;
-    bool  m_CursorCaptured = false;
 };
 
 
