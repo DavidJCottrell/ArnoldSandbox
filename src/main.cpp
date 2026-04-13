@@ -14,7 +14,7 @@ public:
           m_Camera(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
         m_CubeShader = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
-        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/Rembo.JPEG");
+        m_Texture    = AE::Graphics::Renderer::Texture2D::Create("assets/textures/dirt.png");
         m_Camera.SetPosition({32.0f, 5.0f, 32.0f});
     }
 
@@ -47,8 +47,10 @@ public:
         AE::Graphics::Renderer::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         AE::Graphics::Renderer::RenderCommand::Clear();
 
+        m_CubeShader->Bind();
         m_Texture->Bind(0);
         m_CubeShader->UploadUniformInt("u_Texture", 0);
+        m_CubeShader->UploadUniformFloat3("u_LightDir", glm::normalize(glm::vec3(0.6f, 1.0f, 0.4f)));
 
         AE::Graphics::Renderer::Renderer::BeginScene(m_Camera);
         m_World.Render(m_CubeShader);
