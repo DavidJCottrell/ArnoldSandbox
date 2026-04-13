@@ -9,11 +9,13 @@ public:
         : Layer("FpsLayer"),
           m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 1000.0f)
     {
-        auto shader  = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
-        auto texture = AE::Graphics::Renderer::Texture2D::Create("assets/textures/dirt.png");
+        auto shader = AE::Graphics::Renderer::Shader::Create("assets/shaders/textured.glsl");
+        auto atlas  = AE::Graphics::Renderer::TextureAtlas::Create(
+            "assets/textures/grass.jpg",
+            "assets/textures/dirt.png");
 
         m_Material = AE::Graphics::Renderer::Material::Create(shader);
-        m_Material->SetTexture(0, texture);
+        m_Material->SetTexture(0, atlas->GetTexture());
         m_Material->SetInt("u_Texture", 0);
         m_Material->SetFloat3("u_LightDir", glm::normalize(glm::vec3(0.6f, 1.0f, 0.4f)));
 
