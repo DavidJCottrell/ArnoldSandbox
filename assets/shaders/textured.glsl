@@ -2,20 +2,19 @@
 #version 330 core
 
 layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec2 a_TexCoord;
-layout(location = 2) in vec3 a_Normal;
+layout(location = 1) in vec3 a_Normal;
+layout(location = 2) in vec4 a_Color;
 
 uniform mat4 u_ViewProjection;
 uniform mat4 u_Transform;
 
-out vec2 v_TexCoord;
 out vec3 v_Normal;
+out vec4 v_Color;
 
 void main()
 {
-    v_TexCoord  = a_TexCoord;
-    // mat3(u_Transform) handles rotations and uniform scaling; sufficient for block geometry
     v_Normal    = mat3(u_Transform) * a_Normal;
+    v_Color     = a_Color;
     gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 }
 
@@ -24,11 +23,10 @@ void main()
 
 layout(location = 0) out vec4 color;
 
-in vec2 v_TexCoord;
 in vec3 v_Normal;
+in vec4 v_Color;
 
-uniform sampler2D u_Texture;
-uniform vec3      u_LightDir;  // world-space direction toward the light, normalised
+uniform vec3 u_LightDir;
 
 void main()
 {
@@ -36,5 +34,5 @@ void main()
     float diffuse = max(dot(normalize(v_Normal), u_LightDir), 0.0);
     float light   = ambient + (1.0 - ambient) * diffuse;
 
-    color = texture(u_Texture, v_TexCoord) * vec4(vec3(light), 1.0);
+    color = v_Color * vec4(vec3(light), 1.0);
 }
