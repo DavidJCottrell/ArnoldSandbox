@@ -1,4 +1,5 @@
 #type vertex
+#version 330 core
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoord;
@@ -18,6 +19,7 @@ void main()
 }
 
 #type fragment
+#version 330 core
 
 in  vec2 v_TexCoord;
 in  vec3 v_WorldPos;

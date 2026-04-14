@@ -1,17 +1,19 @@
 #type vertex
 #version 330 core
 
-layout(location = 0) in vec3 a_Position;
+layout(location = 0) in vec2 a_NDCPos;
 
 out vec3 v_Direction;
 
-uniform mat4 u_ViewProjection;
+uniform mat4 u_InvViewProjection;  // inverse of (proj * rotation-only-view)
 
 void main()
 {
-    v_Direction = a_Position;
-    vec4 pos    = u_ViewProjection * vec4(a_Position, 1.0);
-    gl_Position = pos.xyww;  // force depth to far plane (z/w = 1.0)
+    gl_Position = vec4(a_NDCPos, 0.9999, 1.0);  // full-screen quad at far plane, w always 1
+
+    // Unproject NDC position back to world direction
+    vec4 worldPos = u_InvViewProjection * vec4(a_NDCPos, 1.0, 1.0);
+    v_Direction   = normalize(worldPos.xyz / worldPos.w);
 }
 
 #type fragment
